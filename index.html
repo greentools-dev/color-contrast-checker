@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WCAG 2.2 Color Contrast Matrix & UI Previewer | 100% Client-Side Accessibility Tool</title>
+  <meta name="description" content="Calculate exact WCAG 2.2 color contrast ratios in real-time. Test foreground and background colors with live UI component previews, Level AA & AAA compliance scoring, and auto-fix suggestions locally in your browser.">
+  <meta name="keywords" content="color contrast checker, wcag 2.2 contrast ratio, accessibility checker, a11y color preview, client-side contrast tool, web accessibility tester">
+  <link rel="canonical" href="https://greentools-dev.github.io/color-contrast-checker/">
+  <meta property="og:title" content="WCAG 2.2 Color Contrast Matrix & UI Previewer">
+  <meta property="og:description" content="Instant WCAG 2.2 Level AA & AAA color contrast auditor with live UI component preview. 100% private & client-side.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://greentools-dev.github.io/color-contrast-checker/">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #f8fafc;
+      background-image: 
+        linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+  </style>
+
+  <!-- Structured Data JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "WCAG 2.2 Color Contrast Matrix & UI Previewer",
+        "url": "https://greentools-dev.github.io/color-contrast-checker/",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "description": "Real-time client-side WCAG 2.2 Level AA & AAA contrast checker with interactive UI component mockups and luminance auto-correction.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is the WCAG 2.2 contrast requirement?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Under WCAG 2.2 Level AA, normal text requires at least a 4.5:1 ratio, large text requires at least 3:1, and non-text UI components require 3:1. For Level AAA, normal text requires at least 7:1 and large text requires 4.5:1."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is relative luminance calculated?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Relative luminance is calculated per W3C specification using linearized sRGB values weighted according to human visual sensitivity: L = 0.2126R + 0.7152G + 0.0722B."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does this tool transmit color data to any server?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. All contrast formulas, color conversions, and UI component renderings execute 100% locally in your browser with zero network transmission."
+            }
+          }
+        ]
+      }
+    ]
+  </script>
+</head>
+<body class="min-h-screen flex flex-col font-sans text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-900">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shadow-emerald-500/20">
+          <i data-lucide="eye" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="font-extrabold text-slate-900 tracking-tight text-lg">GreenTools<span class="text-emerald-600">.dev</span></span>
+          <span class="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">Contrast Matrix</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100/80 px-2.5 py-1 rounded-md border border-slate-200">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+          100% Client-Side Safe
+        </span>
+        <a href="https://github.com/greentools-dev/color-contrast-checker" target="_blank" rel="noopener noreferrer" class="text-slate-500 hover:text-slate-900 transition-colors p-1.5">
+          <i data-lucide="github" class="w-5 h-5"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero & Primary Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8 md:py-12 flex flex-col">
+    <div class="text-center max-w-2xl mx-auto mb-8">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+        WCAG 2.2 Color Contrast Matrix
+      </h1>
+      <p class="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
+        Test foreground and background combinations against WCAG 2.2 Level AA and AAA standards. Preview live UI components and auto-fix failing contrast with one click.
+      </p>
+    </div>
+
+    <!-- Workspace Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Left Column: Controls & Scorecard (5 cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        
+        <!-- Color Pickers Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="palette" class="w-4 h-4 text-emerald-600"></i>
+              Color Pair Configuration
+            </h2>
+            <button type="button" id="btn-swap-colors" title="Swap Foreground and Background" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors">
+              <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Text (Foreground) Color -->
+            <div>
+              <div class="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1.5">
+                <span>Text / Foreground Color</span>
+                <span id="fg-rgb-label" class="font-mono text-slate-400">rgb(15, 23, 42)</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <input type="color" id="fg-picker" value="#0f172a" class="w-12 h-11 rounded-lg border border-slate-300 p-0.5 cursor-pointer bg-white">
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-2.5 text-slate-400 font-mono text-sm">#</span>
+                  <input type="text" id="fg-hex" value="0F172A" maxlength="6" class="w-full pl-7 pr-3 py-2 text-sm font-mono font-medium rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase">
+                </div>
+              </div>
+            </div>
+
+            <!-- Background Color -->
+            <div>
+              <div class="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1.5">
+                <span>Background Color</span>
+                <span id="bg-rgb-label" class="font-mono text-slate-400">rgb(255, 255, 255)</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <input type="color" id="bg-picker" value="#ffffff" class="w-12 h-11 rounded-lg border border-slate-300 p-0.5 cursor-pointer bg-white">
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-2.5 text-slate-400 font-mono text-sm">#</span>
+                  <input type="text" id="bg-hex" value="FFFFFF" maxlength="6" class="w-full pl-7 pr-3 py-2 text-sm font-mono font-medium rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="mt-5 pt-4 border-t border-slate-100">
+            <span class="text-xs font-medium text-slate-500 block mb-2">Popular Design Presets:</span>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <button type="button" class="preset-btn px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors" data-fg="#0f172a" data-bg="#ffffff">Default Dark</button>
+              <button type="button" class="preset-btn px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors" data-fg="#ffffff" data-bg="#0f172a">Dark Mode</button>
+              <button type="button" class="preset-btn px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors" data-fg="#047857" data-bg="#ecfdf5">Emerald Brand</button>
+              <button type="button" class="preset-btn px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors" data-fg="#2563eb" data-bg="#eff6ff">Subtle Blue</button>
+              <button type="button" class="preset-btn px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors" data-fg="#94a3b8" data-bg="#ffffff">Subtle Gray (Failing)</button>
+            </div>
+          </div>
+
+          <!-- Auto-Fix Contrast Button -->
+          <div class="mt-5 pt-4 border-t border-slate-100">
+            <button type="button" id="btn-autofix" class="w-full py-2.5 px-4 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i>
+              Auto-Adjust Foreground to Pass WCAG AA (4.5:1)
+            </button>
+          </div>
+        </div>
+
+        <!-- WCAG 2.2 Scorecard -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Calculated Ratio</span>
+            <span id="badge-contrast-level" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Very High Contrast</span>
+          </div>
+
+          <div class="text-center py-4 bg-slate-50 rounded-xl border border-slate-100 mb-6">
+            <div id="stat-ratio" class="text-4xl sm:text-5xl font-extrabold font-mono text-slate-900">19.56:1</div>
+            <div class="text-xs text-slate-500 mt-1 font-medium">Relative Luminance Ratio</div>
+          </div>
+
+          <!-- Standards Breakdown -->
+          <div class="space-y-3">
+            
+            <!-- Normal Text -->
+            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-slate-900">Normal Text</div>
+                <div class="text-xs text-slate-500">&lt; 18pt / 24px (regular body copy)</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="badge-normal-aa" class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800">AA: PASS</span>
+                <span id="badge-normal-aaa" class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800">AAA: PASS</span>
+              </div>
+            </div>
+
+            <!-- Large Text -->
+            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-slate-900">Large Text</div>
+                <div class="text-xs text-slate-500">&ge; 18pt / 24px or &ge; 14pt bold</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="badge-large-aa" class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800">AA: PASS</span>
+                <span id="badge-large-aaa" class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800">AAA: PASS</span>
+              </div>
+            </div>
+
+            <!-- UI Components & Icons -->
+            <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-slate-900">UI Components</div>
+                <div class="text-xs text-slate-500">Form borders, active buttons, icons</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="badge-ui-aa" class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800">AA (3:1): PASS</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+            <button type="button" id="btn-copy-css" class="flex-1 py-2 px-3 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors inline-flex items-center justify-center gap-1.5 shadow-2xs">
+              <i data-lucide="code" class="w-3.5 h-3.5"></i>
+              <span id="label-copy-css">Copy CSS</span>
+            </button>
+            <button type="button" id="btn-copy-report" class="flex-1 py-2 px-3 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors inline-flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/20">
+              <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i>
+              <span id="label-copy-report">Copy Audit</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Live UI Interactive Canvas & Mockup (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
+        
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="layout" class="w-4 h-4 text-emerald-600"></i>
+              Live Component Preview
+            </h2>
+            <span class="text-xs text-slate-400">Renders selected colors dynamically</span>
+          </div>
+
+          <!-- Preview Frame -->
+          <div id="preview-container" class="rounded-2xl p-8 border border-slate-200 transition-colors duration-200 flex flex-col gap-6" style="background-color: #ffffff; color: #0f172a;">
+            
+            <!-- Headline & Subheading -->
+            <div>
+              <div id="preview-badge" class="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3 border" style="border-color: currentColor;">
+                Accessibility Sample
+              </div>
+              <h3 id="preview-heading" class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
+                High-Contrast Design Matters for Every User
+              </h3>
+              <p id="preview-subtext" class="mt-2 text-sm sm:text-base opacity-90 leading-relaxed max-w-xl">
+                Web Content Accessibility Guidelines (WCAG) 2.2 ensure digital experiences are readable for users with low vision, color blindness, or working in harsh outdoor lighting.
+              </p>
+            </div>
+
+            <!-- Interactive UI Components Simulation -->
+            <div class="pt-4 border-t border-current/20 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              <!-- Simulated Button CTA -->
+              <div class="p-4 rounded-xl border border-current/20 bg-current/5 flex flex-col justify-between">
+                <span class="text-xs font-semibold opacity-75 mb-2">Interactive Button Element:</span>
+                <button type="button" id="preview-button" class="w-full py-2.5 px-4 rounded-lg font-bold text-sm shadow-sm transition-transform active:scale-95" style="background-color: #0f172a; color: #ffffff;">
+                  Primary Action CTA
+                </button>
+              </div>
+
+              <!-- Simulated Form Field -->
+              <div class="p-4 rounded-xl border border-current/20 bg-current/5 flex flex-col justify-between">
+                <span class="text-xs font-semibold opacity-75 mb-2">Form Input Field:</span>
+                <div class="w-full px-3 py-2 text-sm rounded-lg border font-mono flex items-center justify-between" style="border-color: currentColor; background-color: transparent;">
+                  <span>user@company.com</span>
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Small Text & Notes -->
+            <div class="pt-2 text-xs opacity-80 flex items-center justify-between">
+              <span>Caption: 12px Regular Text (Testing smallest legible font size)</span>
+              <span>100% In-Browser Simulation</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Luminance & Contrast Matrix Explanation -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-emerald-600"></i>
+            WCAG 2.2 Threshold Reference
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3">Standard Level</th>
+                  <th class="py-2.5 px-3">Normal Text</th>
+                  <th class="py-2.5 px-3">Large Text (&ge;18pt / 14pt bold)</th>
+                  <th class="py-2.5 px-3">UI Components</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-slate-800">WCAG Level AA (Minimum)</td>
+                  <td class="py-2.5 px-3 font-mono">4.5:1</td>
+                  <td class="py-2.5 px-3 font-mono">3.0:1</td>
+                  <td class="py-2.5 px-3 font-mono">3.0:1</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-semibold text-slate-800">WCAG Level AAA (Enhanced)</td>
+                  <td class="py-2.5 px-3 font-mono">7.0:1</td>
+                  <td class="py-2.5 px-3 font-mono">4.5:1</td>
+                  <td class="py-2.5 px-3 font-mono">N/A</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Sponsor Slot -->
+    <aside id="sponsor-slot" class="mt-8 p-4 rounded-xl border border-dashed border-slate-300 bg-white text-center text-xs text-slate-500">
+      <span class="font-semibold text-slate-600 uppercase tracking-wider text-[11px] block mb-1">Sponsored</span>
+      Ship accessible design systems faster with GreenTools Developer Kit.
+    </aside>
+
+    <!-- FAQ & Educational Guide -->
+    <section class="mt-12 bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
+      <h2 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+        <i data-lucide="help-circle" class="w-5 h-5 text-emerald-600"></i>
+        Accessibility Guide & FAQ
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-600">
+        <div>
+          <h3 class="font-semibold text-slate-800 mb-1">What is the formula for relative luminance?</h3>
+          <p class="leading-relaxed">
+            Per W3C specifications, relative luminance linearly maps sRGB values after gamma expansion:
+            <code>L = 0.2126 * R + 0.7152 * G + 0.0722 * B</code>. The contrast ratio is then <code>(L1 + 0.05) / (L2 + 0.05)</code>, where L1 is the lighter color.
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-800 mb-1">What constitutes "Large Text" under WCAG?</h3>
+          <p class="leading-relaxed">
+            Large text is defined as 18pt (typically 24px) or larger, or 14pt (typically 18.66px) or larger if bold (font-weight 700+). Because larger glyph strokes are easier to resolve, the required contrast threshold drops from 4.5:1 to 3.0:1.
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-800 mb-1">How does the auto-fix feature work?</h3>
+          <p class="leading-relaxed">
+            When you click "Auto-Adjust", the algorithm converts your foreground color to HSL space and iteratively modifies its lightness channel in step increments until the calculated contrast against your background meets or exceeds 4.5:1.
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-800 mb-1">Can I test transparent colors?</h3>
+          <p class="leading-relaxed">
+            WCAG contrast calculation assumes opaque colors rendered on solid surfaces. When designing transparent or translucent overlays, composite them against their underlying surface before testing.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white mt-12 py-8">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-800">GreenTools.dev</span>
+        <span>&bull;</span>
+        <span>100% Client-Side Web Utilities</span>
+      </div>
+      <div>
+        WCAG 2.2 Compliant Color Engine &bull; Zero Server Analytics
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script Logic -->
+  <script>
+    lucide.createIcons();
+
+    // DOM Elements
+    const fgPicker = document.getElementById('fg-picker');
+    const fgHex = document.getElementById('fg-hex');
+    const fgRgbLabel = document.getElementById('fg-rgb-label');
+
+    const bgPicker = document.getElementById('bg-picker');
+    const bgHex = document.getElementById('bg-hex');
+    const bgRgbLabel = document.getElementById('bg-rgb-label');
+
+    const btnSwap = document.getElementById('btn-swap-colors');
+    const btnAutofix = document.getElementById('btn-autofix');
+    const btnCopyCss = document.getElementById('btn-copy-css');
+    const btnCopyReport = document.getElementById('btn-copy-report');
+    const labelCopyCss = document.getElementById('label-copy-css');
+    const labelCopyReport = document.getElementById('label-copy-report');
+
+    const statRatio = document.getElementById('stat-ratio');
+    const badgeContrastLevel = document.getElementById('badge-contrast-level');
+
+    const badgeNormalAa = document.getElementById('badge-normal-aa');
+    const badgeNormalAaa = document.getElementById('badge-normal-aaa');
+    const badgeLargeAa = document.getElementById('badge-large-aa');
+    const badgeLargeAaa = document.getElementById('badge-large-aaa');
+    const badgeUiAa = document.getElementById('badge-ui-aa');
+
+    const previewContainer = document.getElementById('preview-container');
+    const previewButton = document.getElementById('preview-button');
+
+    // Color conversion utilities
+    function hexToRgb(hex) {
+      hex = hex.replace(/^#/, '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      const num = parseInt(hex, 16);
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0; // achromatic
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h, s, l };
+    }
+
+    function hslToRgb(h, s, l) {
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l; // achromatic
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+      };
+    }
+
+    // Relative Luminance per W3C
+    function getLuminance(r, g, b) {
+      const a = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+    }
+
+    function getContrastRatio(rgb1, rgb2) {
+      const lum1 = getLuminance(rgb1.r, rgb1.g, rgb1.b);
+      const lum2 = getLuminance(rgb2.r, rgb2.g, rgb2.b);
+      const brightest = Math.max(lum1, lum2);
+      const darkest = Math.min(lum1, lum2);
+      return (brightest + 0.05) / (darkest + 0.05);
+    }
+
+    function updateBadge(badge, passed, text) {
+      if (passed) {
+        badge.className = 'px-2 py-0.5 text-xs font-bold rounded bg-emerald-100 text-emerald-800 border border-emerald-200';
+        badge.textContent = `${text}: PASS`;
+      } else {
+        badge.className = 'px-2 py-0.5 text-xs font-bold rounded bg-red-100 text-red-800 border border-red-200';
+        badge.textContent = `${text}: FAIL`;
+      }
+    }
+
+    function evaluateContrast() {
+      let fgClean = fgHex.value.trim().replace(/^#/, '');
+      let bgClean = bgHex.value.trim().replace(/^#/, '');
+
+      if (!/^[0-9A-Fa-f]{6}$/.test(fgClean)) fgClean = '0F172A';
+      if (!/^[0-9A-Fa-f]{6}$/.test(bgClean)) bgClean = 'FFFFFF';
+
+      const fg = hexToRgb(fgClean);
+      const bg = hexToRgb(bgClean);
+
+      fgRgbLabel.textContent = `rgb(${fg.r}, ${fg.g}, ${fg.b})`;
+      bgRgbLabel.textContent = `rgb(${bg.r}, ${bg.g}, ${bg.b})`;
+
+      const ratio = getContrastRatio(fg, bg);
+      statRatio.textContent = `${ratio.toFixed(2)}:1`;
+
+      // Update Rating Badge
+      if (ratio >= 7.0) {
+        badgeContrastLevel.textContent = 'AAA Highest Quality';
+        badgeContrastLevel.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+      } else if (ratio >= 4.5) {
+        badgeContrastLevel.textContent = 'AA Standard Pass';
+        badgeContrastLevel.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+      } else if (ratio >= 3.0) {
+        badgeContrastLevel.textContent = 'Passes Large Text Only';
+        badgeContrastLevel.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800';
+      } else {
+        badgeContrastLevel.textContent = 'Fails WCAG 2.2 Standards';
+        badgeContrastLevel.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-red-800';
+      }
+
+      // Check Pass/Fail
+      updateBadge(badgeNormalAa, ratio >= 4.5, 'AA');
+      updateBadge(badgeNormalAaa, ratio >= 7.0, 'AAA');
+      updateBadge(badgeLargeAa, ratio >= 3.0, 'AA');
+      updateBadge(badgeLargeAaa, ratio >= 4.5, 'AAA');
+      updateBadge(badgeUiAa, ratio >= 3.0, 'AA (3:1)');
+
+      // Update Live UI Preview
+      const fgHexStr = `#${fgClean}`;
+      const bgHexStr = `#${bgClean}`;
+
+      previewContainer.style.backgroundColor = bgHexStr;
+      previewContainer.style.color = fgHexStr;
+
+      previewButton.style.backgroundColor = fgHexStr;
+      previewButton.style.color = bgHexStr;
+    }
+
+    // Event Handlers for color changes
+    function onFgPickerChange(e) {
+      const hex = e.target.value.replace('#', '').toUpperCase();
+      fgHex.value = hex;
+      evaluateContrast();
+    }
+
+    function onBgPickerChange(e) {
+      const hex = e.target.value.replace('#', '').toUpperCase();
+      bgHex.value = hex;
+      evaluateContrast();
+    }
+
+    function onFgHexChange(e) {
+      let hex = e.target.value.replace(/[^0-9A-Fa-f]/g, '');
+      if (hex.length === 6) {
+        fgPicker.value = `#${hex}`;
+        evaluateContrast();
+      }
+    }
+
+    function onBgHexChange(e) {
+      let hex = e.target.value.replace(/[^0-9A-Fa-f]/g, '');
+      if (hex.length === 6) {
+        bgPicker.value = `#${hex}`;
+        evaluateContrast();
+      }
+    }
+
+    fgPicker.addEventListener('input', onFgPickerChange);
+    bgPicker.addEventListener('input', onBgPickerChange);
+    fgHex.addEventListener('input', onFgHexChange);
+    bgHex.addEventListener('input', onBgHexChange);
+
+    // Swap Colors
+    btnSwap.addEventListener('click', () => {
+      const temp = fgHex.value;
+      fgHex.value = bgHex.value;
+      bgHex.value = temp;
+      fgPicker.value = `#${fgHex.value}`;
+      bgPicker.value = `#${bgHex.value}`;
+      evaluateContrast();
+    });
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const fg = btn.dataset.fg.replace('#', '').toUpperCase();
+        const bg = btn.dataset.bg.replace('#', '').toUpperCase();
+        fgHex.value = fg;
+        bgHex.value = bg;
+        fgPicker.value = `#${fg}`;
+        bgPicker.value = `#${bg}`;
+        evaluateContrast();
+      });
+    });
+
+    // Auto-fix contrast to meet 4.5:1
+    btnAutofix.addEventListener('click', () => {
+      let fgClean = fgHex.value.trim().replace(/^#/, '');
+      let bgClean = bgHex.value.trim().replace(/^#/, '');
+      const fgRgb = hexToRgb(fgClean);
+      const bgRgb = hexToRgb(bgClean);
+      const bgLum = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
+
+      const fgHsl = rgbToHsl(fgRgb.r, fgRgb.g, fgRgb.b);
+      // Determine if we should darken or lighten the foreground
+      const darken = bgLum > 0.4;
+
+      let currentRatio = getContrastRatio(fgRgb, bgRgb);
+      let step = darken ? -0.01 : 0.01;
+
+      while (currentRatio < 4.5 && fgHsl.l >= 0 && fgHsl.l <= 1) {
+        fgHsl.l += step;
+        const newRgb = hslToRgb(fgHsl.h, fgHsl.s, Math.max(0, Math.min(1, fgHsl.l)));
+        currentRatio = getContrastRatio(newRgb, bgRgb);
+        if (currentRatio >= 4.5) {
+          const newHex = rgbToHex(newRgb.r, newRgb.g, newRgb.b);
+          fgHex.value = newHex;
+          fgPicker.value = `#${newHex}`;
+          break;
+        }
+      }
+      evaluateContrast();
+    });
+
+    // Copy CSS Snippet
+    btnCopyCss.addEventListener('click', async () => {
+      const css = `/* WCAG 2.2 Accessible Color Pair */\ncolor: #${fgHex.value};\nbackground-color: #${bgHex.value};`;
+      await navigator.clipboard.writeText(css);
+      labelCopyCss.textContent = 'Copied!';
+      setTimeout(() => labelCopyCss.textContent = 'Copy CSS', 2000);
+    });
+
+    // Copy Audit Report
+    btnCopyReport.addEventListener('click', async () => {
+      const report = `WCAG 2.2 Color Contrast Audit:
+Foreground: #${fgHex.value} (${fgRgbLabel.textContent})
+Background: #${bgHex.value} (${bgRgbLabel.textContent})
+Contrast Ratio: ${statRatio.textContent}
+- Normal Text AA (4.5:1): ${badgeNormalAa.textContent.includes('PASS') ? 'PASS' : 'FAIL'}
+- Normal Text AAA (7:1): ${badgeNormalAaa.textContent.includes('PASS') ? 'PASS' : 'FAIL'}
+- Large Text AA (3:1): ${badgeLargeAa.textContent.includes('PASS') ? 'PASS' : 'FAIL'}
+- Large Text AAA (4.5:1): ${badgeLargeAaa.textContent.includes('PASS') ? 'PASS' : 'FAIL'}
+- UI Components AA (3:1): ${badgeUiAa.textContent.includes('PASS') ? 'PASS' : 'FAIL'}
+Generated by GreenTools.dev (100% Client-Side)`;
+
+      await navigator.clipboard.writeText(report);
+      labelCopyReport.textContent = 'Audit Copied!';
+      setTimeout(() => labelCopyReport.textContent = 'Copy Audit', 2000);
+    });
+
+    // Initial evaluation
+    evaluateContrast();
+  </script>
+</body>
+</html>
